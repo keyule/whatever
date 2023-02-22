@@ -1,5 +1,5 @@
 import discum
-from discord_webhook import DiscordWebhook
+from discord import SyncWebhook
 import os
 from dotenv import load_dotenv
 
@@ -9,6 +9,8 @@ logintoken = os.getenv('LOGIN_TOKEN')
 channeltostalk = os.getenv('CHANNEL_ID')
 
 bot = discum.Client(token=logintoken, log=False)
+
+webhook = SyncWebhook.from_url(webhookurl)
 
 @bot.gateway.command
 def helloworld(resp):
@@ -22,11 +24,37 @@ def helloworld(resp):
         username = m['author']['username']
         discriminator = m['author']['discriminator']
         contents = m['content']
-        fullContents = username + ": " + contents 
         if channelID == channeltostalk :
-            webhook = DiscordWebhook(url=webhookurl, content=fullContents)
-            response = webhook.execute()
-            print("> guild {} channel {} | {}#{}: {} > {}".format(guildID, channelID, username, discriminator, contents, response))
-        #print("> guild {} channel {} | {}#{}: {}".format(guildID, channelID, username, discriminator, content))
+            #print(m)
+            if len(m['embeds']) > 0:
+                for i in range(len(m['embeds'])):
+                    content = m['embeds'][i]
+
+                    embed = discord.Embed(title="", description="")
+                    embed.title = content['title']
+                    embed.url = content['url']
+                    embed.colour = content['color']
+                    embed.description = content['description']
+                    embed.set_thumbnail(url=content['thumbnail']['url'])
+                    embed.set_image(url=content['image']['url'])
+                    embed.set_footer(text=content['footer']['text'], icon_url=content['footer']['icon_url'])
+                    embed.set_author(name=content['author']['name'], url=content['author']['url'])
+
+                    if 'fields' in content.keys():
+                        for field in content['fields']:
+                            name = field['name']
+                            value = field['value']
+                            embed.add_field(name=name, value=value, inline=field['inline'])
+
+                webhook.send(embed=embed, username=username)
+
+            if contents != "":
+                webhook.send(content=contents, username=username)
+
+            if len(m['attachments']) > 0:
+                for attachment in m['attachments']:
+                    webhook.send(attachment['url'], username=username)
+
+            print("> guild {} channel   {} | {}#{}: {}".format(guildID, channelID, username, discriminator, contents))
 
 bot.gateway.run(auto_reconnect=True)
