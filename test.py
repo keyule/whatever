@@ -1,9 +1,12 @@
 import discum
 from discord_webhook import DiscordWebhook
+import os
+from dotenv import load_dotenv
 
-webhookurl = '<url>'
-logintoken = '<token>'
-channeltostalk = '<channel>'
+load_dotenv()
+webhookurl = os.getenv('WEB_HOOK_URL')
+logintoken = os.getenv('LOGIN_TOKEN')
+channeltostalk = os.getenv('CHANNEL_ID')
 
 bot = discum.Client(token=logintoken, log=False)
 

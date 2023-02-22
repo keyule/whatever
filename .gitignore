@@ -6,3 +6,4 @@ include/
 .python-version
 pyvenv.cfg
 Scripts/
+.env
